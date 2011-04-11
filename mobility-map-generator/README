@@ -1,0 +1,162 @@
+*******************************************
+*					  *
+*					  *
+* Vehicular Network Movement Generator    *
+* Author: Josiane Nzouonta		  *
+* Computer Science Dept, 		  *
+* Ubiquitous Networking Lab, 		  *
+* New Jersey Institute of Technology      *
+* Email: jn62@njit.edu			  *
+* http://web.njit.edu/~borcea/invent/	  *
+*					  *
+*					  *
+*******************************************
+
+The program included generates microscopic and macroscopic movement files 
+for input into the Network Simulator, NS2.
+It is based on the car-following and lane-changing model 
+presented by Gipps [1,2]. 
+
+The files included in the directory:
+
+city-generator.cpp (c++ code)
+citymapsample (sample input map for city environment)
+
+
+city-generator.cc generates mobility for a city scenario. The output contains a movement and a macro-movement files.
+The movement file contains the microscopic nodes positions in NS2 input format i.e. the exact x,y positions of each 
+node. The macro-movement file contains the macrocopic node positions i.e. the current road segment and road id on 
+which the node is positioned. More on this below.
+
+Compilation: g++ -o citygen city-generator.cpp
+
+To Run:
+There are two ways the program can be run:
+
+(a) Without any arguments: The program generates the output files with predefined configured values for the following arguments.
+
+Example for running the program:
+$ ./citygen
+The above command with generate the output with default values specified in the program. Please follow the onscreen instructions.
+
+
+(b) With all the six required arguments: The program generates output by over-writing the default values with the values passed in the argument list.
+Parameters used by the script are:
+1- Period for which simulation output is required.
+2- The number of cars in the simulation.
+3- Warm up period the initial period for which the output should be discarded.
+4- The map file for the area simulated (e.g. citymap file included). Can be extracted from Tiger Maps.
+5- Output file name which will contain the movement (required by ns2)
+6- Output file name containing the macro movement of the nodes, required by some of the protocols.
+
+Example for running the program:
+$ ./citygen 300 150 1000 ./citymapsample mvtcity_150 macrocity_150
+The above command uses following values to generate the output: 
+time = 300sec; number of cars = 150; warm_up period = 1000sec; citymap file = ./citymapsample, 
+output movement filename = mvtcity_150, output macro filename = macrocity_150
+
+Note that currently, if the program has to be run with arguments then all the argument should be specified and in strict sequence as given above.
+
+
+Format of map input file:
+---------------------------
+
+The map input file, written in an XML-like format, contains the list of intersections 
+Below, we present a sample input map file for a one segment road with two way traffic.
+
+Example:
+#Map size -> 1581 X 1453
+<INTERSECTION>
+IID=1
+XPOS=757
+YPOS=4100
+</INTERSECTION>
+<INTERSECTION>
+IID=2
+XPOS=1567
+YPOS=4100
+</INTERSECTION>
+<ROAD>
+FLOW=504
+SPEED=26.66
+ENTRY=0
+#Name=road 1;  
+<SEGMENT>
+START=1
+END=2
+SEGM_ENTRY=1
+LANE=2
+</SEGMENT>
+<SEGMENT>
+START=2
+END=1
+SEGM_ENTRY=0
+LANE=2
+</SEGMENT>
+</ROAD>
+
+In this example, we have a road with two road intersections and two road segments representing 
+the bidirectional traffic on the road.
+
+<INTERSECTION>...</INTERSECTION> delimites the declaration of an intersection on the map.
+An intersection is described by (i) its ID, noted "IID" for intersection ID, (ii) its x and y 
+positions noted "XPOS" and "YPOS" respectively.
+
+<ROAD>...</ROAD> delimites the declaration of a road on the map. Attributes of a road are the 
+hourly traffic flow "FLOW", the average speed on the road "SPEED" and a boolean indicator 
+specifying whether this road is used for initial traffic injection on the map (this attribute 
+is no longer used, as that specification is now made at the road segment level).
+
+<SEGMENT>...</SEGMENT> declares a unidirectional road segment on the road. Its attributes are 
+(i) the start intersection ID called "START", (ii) the end intersection ID noted "END", 
+(iii) an attribute specifying whether this segment is used for the initial insertion of 
+vehicules, noted "SEGM_ENTRY" and finally the number of lanes on this segment, noted "LANE".
+
+Lines starting with # are comments
+
+Traffic lights:
+----------------
+The city generator script adds traffic lights at each intersection on the map.
+The length of each period of traffic (Green, Red, Yellow) are controlled by the 
+constant RED_LIGHT_LENGTH (default 15sec), YELLOW_LIGHT_LENGTH (default 4sec) and 
+GREEN_LIGHT_LENGTH (default 10sec).
+
+
+Border mode:
+--------------
+
+The border mode defines the actions of a node which reaches the border of the map. 
+We identify three possible scenarios: all nodes can be made to make a u-turn and never 
+leave the map, or all nodes can exit the map and re-enter through another road segment 
+or a combination of these two scenarios, with a certain percentage of nodes making 
+u-turns while others exit the map. Currently implemented with the first two scenarios.
+The variable "method" is used for swithching between the scenarios.
+
+
+
+References:
+[1] @article{ 
+        author = "P. G. Gipps",
+        title = "A Behavioural Car-Following Model for Computer Simulation",
+        journal = "Transportation Research Board",
+        pages = "105--111",
+        volume = "15",
+        year = "1981"
+}
+
+[2] @article{ 
+        author = "P. G. Gipps",
+        title = "A model for the structure of lane-changing decisions",
+        journal = "Transportation Research Board",
+        pages = "403--414",
+        volume = "20B",
+        number = "5",
+        year = "1986"
+}
+
+
+
+
+
+
+
